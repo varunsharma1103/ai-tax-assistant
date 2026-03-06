@@ -1,0 +1,88 @@
+{
+  "financial_year": "2025-26",
+  "assessment_year": "2026-27",
+  "cess_percent": 4,
+
+  "standard_deduction": {
+    "salaried": 50000,
+    "pensioners": 50000,
+    "others": 0
+  },
+
+  "rebate_87A": {
+    "new_regime": {
+      "eligible_upto_income": 700000,
+      "max_rebate": 25000
+    },
+    "old_regime": {
+      "eligible_upto_income": 500000,
+      "max_rebate": 12500
+    }
+  },
+
+  "old_regime": {
+    "basic_exemption_limit": {
+      "below_60": 250000,
+      "between_60_80": 300000,
+      "above_80": 500000
+    },
+    "slabs": [
+      {
+        "min": 0,
+        "max": 250000,
+        "rate": 0
+      },
+      {
+        "min": 250000,
+        "max": 500000,
+        "rate": 0.05
+      },
+      {
+        "min": 500000,
+        "max": 1000000,
+        "rate": 0.20
+      },
+      {
+        "min": 1000000,
+        "max": null,
+        "rate": 0.30
+      }
+    ]
+  },
+
+  "new_regime": {
+    "basic_exemption_limit": 300000,
+    "slabs": [
+      {
+        "min": 0,
+        "max": 300000,
+        "rate": 0
+      },
+      {
+        "min": 300000,
+        "max": 600000,
+        "rate": 0.05
+      },
+      {
+        "min": 600000,
+        "max": 900000,
+        "rate": 0.10
+      },
+      {
+        "min": 900000,
+        "max": 1200000,
+        "rate": 0.15
+      },
+      {
+        "min": 1200000,
+        "max": 1500000,
+        "rate": 0.20
+      },
+      {
+        "min": 1500000,
+        "max": null,
+        "rate": 0.30
+      }
+    ]
+  }
+}

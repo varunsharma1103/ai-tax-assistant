@@ -1,0 +1,53 @@
+{
+  "financial_year": "2025-26",
+  "assessment_year": "2026-27",
+
+  "forms": [
+    {
+      "form_name": "ITR-1",
+      "description": "For salaried individuals with income up to ₹50 lakh and no capital gains or business income.",
+      "eligibility": {
+        "employment_types": ["Salaried", "Pensioner"],
+        "max_income": 5000000,
+        "allow_capital_gains": false,
+        "allow_business_income": false,
+        "allow_multiple_house_properties": false,
+        "allow_foreign_income": false
+      }
+    },
+
+    {
+      "form_name": "ITR-2",
+      "description": "For individuals with capital gains, multiple house properties, foreign income, but no business income.",
+      "eligibility": {
+        "employment_types": ["Salaried", "Pensioner", "Other"],
+        "allow_capital_gains": true,
+        "allow_business_income": false,
+        "allow_multiple_house_properties": true,
+        "allow_foreign_income": true
+      }
+    },
+
+    {
+      "form_name": "ITR-3",
+      "description": "For individuals and HUFs having income from business or profession.",
+      "eligibility": {
+        "employment_types": ["Business", "Freelancer", "Professional"],
+        "allow_capital_gains": true,
+        "allow_business_income": true,
+        "allow_multiple_house_properties": true,
+        "allow_foreign_income": true
+      }
+    },
+
+    {
+      "form_name": "ITR-4",
+      "description": "For individuals opting for presumptive taxation scheme under sections 44AD, 44ADA, or 44AE with income up to ₹50 lakh.",
+      "eligibility": {
+        "employment_types": ["Business", "Freelancer", "Professional"],
+        "max_income": 5000000,
+        "presumptive_taxation": true
+      }
+    }
+  ]
+}

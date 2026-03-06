@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<title>AI Tax Assistant</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f4f6fb;
+display:flex;
+justify-content:center;
+margin-top:40px;
+}
+
+.chat-container{
+width:650px;
+background:white;
+border-radius:14px;
+box-shadow:0 10px 30px rgba(0,0,0,0.1);
+overflow:hidden;
+}
+
+.header{
+background:#1f2a44;
+color:white;
+padding:18px;
+font-weight:bold;
+}
+
+.chat-body{
+height:430px;
+overflow-y:auto;
+padding:20px;
+background:#f7f8fc;
+}
+
+.user-message{
+background:#3a6ad6;
+color:white;
+padding:12px 16px;
+border-radius:20px;
+max-width:70%;
+margin-left:auto;
+margin-bottom:15px;
+}
+
+.bot-message{
+background:#e5e7eb;
+padding:12px 16px;
+border-radius:12px;
+max-width:75%;
+margin-bottom:15px;
+}
+
+.typing{
+font-style:italic;
+color:#777;
+margin-bottom:10px;
+}
+
+.chat-input{
+display:flex;
+border-top:1px solid #ddd;
+padding:10px;
+}
+
+.chat-input input{
+flex:1;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+.chat-input button{
+margin-left:10px;
+padding:10px 18px;
+border:none;
+background:#3a6ad6;
+color:white;
+border-radius:8px;
+cursor:pointer;
+}
+
+.profession-buttons button{
+margin:5px;
+padding:8px 12px;
+border:none;
+background:#3a6ad6;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+.faq-buttons button{
+margin:5px;
+padding:6px 10px;
+background:#eef2ff;
+border:1px solid #d1d5db;
+border-radius:6px;
+cursor:pointer;
+}
+
+.footer{
+text-align:center;
+font-size:12px;
+color:#888;
+padding:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="chat-container">
+
+<div class="header">
+AI-Powered ITR Assistant (FY 2025-26)
+</div>
+
+<div class="chat-body" id="chatBox">
+
+{% for msg in chat_history %}
+
+{% if msg.role == "user" %}
+<div class="user-message">{{ msg.content }}</div>
+{% else %}
+<div class="bot-message">{{ msg.content|safe }}</div>
+{% endif %}
+
+{% endfor %}
+
+{% if step == "profession" %}
+
+<div class="profession-buttons">
+
+<button onclick="sendMsg('Salaried')">Salaried</button>
+<button onclick="sendMsg('Freelancer')">Freelancer</button>
+<button onclick="sendMsg('Business Owner')">Business Owner</button>
+<button onclick="sendMsg('Self Employed')">Self Employed</button>
+
+</div>
+
+{% endif %}
+
+<div class="faq-buttons">
+
+<button onclick="sendMsg('80C')">80C</button>
+<button onclick="sendMsg('ITR Filing')">ITR Filing</button>
+<button onclick="sendMsg('New Regime')">New Regime</button>
+<button onclick="sendMsg('Save Tax')">Save Tax</button>
+
+</div>
+
+</div>
+
+<form method="POST" id="chatForm">
+
+<div class="chat-input">
+
+<input name="message" id="messageInput" placeholder="Type your answer..." required>
+
+<button type="submit">Send</button>
+
+</div>
+
+</form>
+
+<div class="footer">
+⚠ Educational tax assistance only.
+</div>
+
+</div>
+
+<script>
+
+function sendMsg(text){
+document.getElementById("messageInput").value=text;
+document.getElementById("chatForm").submit();
+}
+
+const chatBox=document.getElementById("chatBox");
+chatBox.scrollTop=chatBox.scrollHeight;
+
+</script>
+
+</body>
+</html>
