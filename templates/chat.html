@@ -53,12 +53,7 @@ padding:12px 16px;
 border-radius:12px;
 max-width:75%;
 margin-bottom:15px;
-}
-
-.typing{
-font-style:italic;
-color:#777;
-margin-bottom:10px;
+line-height:1.5;
 }
 
 .chat-input{
@@ -84,6 +79,10 @@ border-radius:8px;
 cursor:pointer;
 }
 
+.profession-buttons{
+margin-top:10px;
+}
+
 .profession-buttons button{
 margin:5px;
 padding:8px 12px;
@@ -92,6 +91,16 @@ background:#3a6ad6;
 color:white;
 border-radius:6px;
 cursor:pointer;
+}
+
+.faq-section{
+margin-top:15px;
+}
+
+.faq-section p{
+font-size:14px;
+color:#666;
+margin-bottom:8px;
 }
 
 .faq-buttons button{
@@ -122,17 +131,22 @@ padding:10px;
 AI-Powered ITR Assistant (FY 2025-26)
 </div>
 
+
 <div class="chat-body" id="chatBox">
+
 
 {% for msg in chat_history %}
 
 {% if msg.role == "user" %}
 <div class="user-message">{{ msg.content }}</div>
+
 {% else %}
 <div class="bot-message">{{ msg.content|safe }}</div>
+
 {% endif %}
 
 {% endfor %}
+
 
 {% if step == "profession" %}
 
@@ -145,7 +159,10 @@ AI-Powered ITR Assistant (FY 2025-26)
 
 </div>
 
-{% endif %}
+
+<div class="faq-section">
+
+<p>Quick questions:</p>
 
 <div class="faq-buttons">
 
@@ -158,11 +175,17 @@ AI-Powered ITR Assistant (FY 2025-26)
 
 </div>
 
+{% endif %}
+
+
+</div>
+
+
 <form method="POST" id="chatForm">
 
 <div class="chat-input">
 
-<input name="message" id="messageInput" placeholder="Type your answer..." required>
+<input name="message" id="messageInput" placeholder="Type your answer..." required autofocus>
 
 <button type="submit">Send</button>
 
@@ -170,11 +193,14 @@ AI-Powered ITR Assistant (FY 2025-26)
 
 </form>
 
+
 <div class="footer">
 ⚠ Educational tax assistance only.
 </div>
 
+
 </div>
+
 
 <script>
 
@@ -188,5 +214,7 @@ chatBox.scrollTop=chatBox.scrollHeight;
 
 </script>
 
+
 </body>
+
 </html>

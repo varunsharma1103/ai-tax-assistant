@@ -1,13 +1,61 @@
 from flask import Flask, render_template, request, session
 import re
+import os
+from groq import Groq
 
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 # -----------------------
-# Indian currency display
+# AI RESPONSE
 # -----------------------
+
+def ai_reply(user_message, history):
+
+    try:
+
+        messages = [
+            {
+                "role": "system",
+                "content": """
+You are an AI assistant helping users understand Indian income tax.
+
+Rules:
+• Keep answers short
+• Use bullet points where helpful
+"""
+            }
+        ]
+
+        for msg in history[-6:]:
+            messages.append({
+                "role": msg["role"],
+                "content": msg["content"]
+            })
+
+        messages.append({
+            "role": "user",
+            "content": user_message
+        })
+
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
+            messages=messages,
+            temperature=0.2
+        )
+
+        return response.choices[0].message.content.replace("\n","<br>")
+
+    except Exception:
+        return "⚠️ AI service unavailable right now."
+
+
+# -----------------------
+# FORMAT INDIAN CURRENCY
+# -----------------------
+
 def format_indian(amount):
 
     if amount >= 10000000:
@@ -20,31 +68,40 @@ def format_indian(amount):
 
 
 # -----------------------
-# Parse numbers
+# IMPROVED AMOUNT PARSER
 # -----------------------
+
 def parse_amount(text):
 
     text = text.lower().replace(",", "")
 
-    match = re.search(r"(\d+(\.\d+)?)", text)
+    total = 0
 
-    if not match:
-        return 0
+    crore_match = re.search(r'(\d+(\.\d+)?)\s*crore', text)
+    lakh_match = re.search(r'(\d+(\.\d+)?)\s*lakh', text)
+    thousand_match = re.search(r'(\d+(\.\d+)?)\s*thousand', text)
 
-    number = float(match.group(1))
+    if crore_match:
+        total += float(crore_match.group(1)) * 10000000
 
-    if "crore" in text:
-        return number * 10000000
+    if lakh_match:
+        total += float(lakh_match.group(1)) * 100000
 
-    if "lakh" in text:
-        return number * 100000
+    if thousand_match:
+        total += float(thousand_match.group(1)) * 1000
 
-    return number
+    if total == 0:
+        number_match = re.search(r'(\d+(\.\d+)?)', text)
+        if number_match:
+            total = float(number_match.group(1))
+
+    return total if total != 0 else None
 
 
 # -----------------------
-# Tax calculator
+# TAX CALCULATION
 # -----------------------
+
 def calculate_tax(income, deductions):
 
     taxable = max(income - deductions, 0)
@@ -52,7 +109,6 @@ def calculate_tax(income, deductions):
     old_tax = 0
     new_tax = 0
 
-    # OLD REGIME
     if taxable > 250000:
 
         if taxable <= 500000:
@@ -65,7 +121,6 @@ def calculate_tax(income, deductions):
             old_tax = 112500 + (taxable - 1000000) * 0.30
 
 
-    # NEW REGIME
     if taxable > 300000:
 
         if taxable <= 600000:
@@ -84,7 +139,6 @@ def calculate_tax(income, deductions):
             new_tax = 150000 + (taxable - 1500000) * 0.30
 
 
-    # Rebate
     if taxable <= 500000:
         old_tax = 0
 
@@ -95,8 +149,9 @@ def calculate_tax(income, deductions):
 
 
 # -----------------------
-# ITR suggestion
+# ITR SUGGESTION
 # -----------------------
+
 def suggest_itr(profession, income):
 
     if profession == "salaried" and income <= 5000000:
@@ -105,16 +160,17 @@ def suggest_itr(profession, income):
     if profession == "salaried" and income > 5000000:
         return "ITR-2"
 
-    if profession in ["freelancer", "self employed", "business owner"]:
+    if profession in ["freelancer","self employed","business owner"]:
         return "ITR-3"
 
     return "ITR-2"
 
 
 # -----------------------
-# Home route
+# HOME ROUTE
 # -----------------------
-@app.route("/", methods=["GET", "POST"])
+
+@app.route("/", methods=["GET","POST"])
 def home():
 
     if request.method == "GET":
@@ -125,138 +181,139 @@ def home():
         session["chat_history"] = []
 
         session["chat_history"].append({
-            "role": "assistant",
-            "content": "👋 Welcome to AI Tax Assistant.<br><br>Select your profession:"
+            "role":"assistant",
+            "content":"👋 Welcome to AI Tax Assistant.<br><br>Select your profession:"
         })
 
 
     if request.method == "POST":
 
         message = request.form["message"]
-
-        session["chat_history"].append({
-            "role": "user",
-            "content": message
-        })
-
         msg = message.lower()
 
+        session["chat_history"].append({
+            "role":"user",
+            "content":message
+        })
 
-        # -----------------------
-        # FAQ HANDLER
-        # -----------------------
-        if "80c" in msg:
+        step = session["step"]
 
-            response = """
-📊 <b>Section 80C Deductions</b><br><br>
 
-Maximum deduction: <b>₹1.5 Lakh</b>
+        # QUESTION DETECTION
 
-Eligible investments:
-• PPF  
-• ELSS Mutual Funds  
-• LIC Premium  
-• EPF  
-• Tax Saving FD
-"""
+        if any(word in msg for word in ["what","why","how","explain"]):
 
-        elif "itr filing" in msg:
+            ai_answer = ai_reply(message, session["chat_history"])
 
-            response = """
-📄 <b>Steps to File ITR</b><br><br>
-
-1️⃣ Login to Income Tax Portal  
-2️⃣ Select correct ITR form  
-3️⃣ Fill income details  
-4️⃣ Add deductions  
-5️⃣ Verify return using Aadhaar OTP
-"""
-
-        elif "new regime" in msg:
-
-            response = """
-📊 <b>New Tax Regime (FY 2025-26)</b>
-
-0-3 Lakh → 0%  
-3-6 Lakh → 5%  
-6-9 Lakh → 10%  
-9-12 Lakh → 15%  
-12-15 Lakh → 20%  
-Above 15 Lakh → 30%
-
-✅ Rebate available up to ₹7 Lakh income.
-"""
-
-        elif "save tax" in msg:
-
-            response = """
-💡 <b>Best Tax Saving Options</b>
-
-• Invest ₹1.5L under 80C  
-• Health insurance deduction (80D)  
-• NPS additional ₹50K  
-• Home loan interest deduction  
-• HRA exemption
-"""
-
-        else:
-
-            step = session["step"]
+            followup = ""
 
             if step == "profession":
+                followup = "<br><br>Please select your profession."
+
+            elif step == "age":
+                followup = "<br><br>Please enter your age."
+
+            elif step == "pan":
+                followup = "<br><br>Please enter your PAN number."
+
+            elif step == "income":
+                followup = "<br><br>Please enter your annual income."
+
+            elif step == "deductions":
+                followup = "<br><br>Please enter deductions amount or type 0."
+
+            response = ai_answer + followup
+
+
+        # PROFESSION STEP
+
+        elif step == "profession":
+
+            valid = ["salaried","freelancer","business owner","self employed"]
+
+            if msg in valid:
 
                 session["profession"] = msg
                 session["step"] = "age"
 
                 response = "Great 👍 What is your age?"
 
+            else:
 
-            elif step == "age":
-
-                if not message.isdigit():
-                    response = "❌ Please enter age in numbers."
-
-                else:
-
-                    session["age"] = int(message)
-                    session["step"] = "pan"
-
-                    response = "Enter your PAN number (Example: ABCDE1234F)"
+                ai_answer = ai_reply(message, session["chat_history"])
+                response = ai_answer + "<br><br>Please select your profession."
 
 
-            elif step == "pan":
+        # AGE STEP
 
-                pan = message.upper()
+        elif step == "age":
 
-                if not re.match(r"[A-Z]{5}[0-9]{4}[A-Z]", pan):
-                    response = "❌ Invalid PAN format."
+            if not message.isdigit():
 
-                else:
+                ai_answer = ai_reply(message, session["chat_history"])
+                response = ai_answer + "<br><br>Please enter your age in numbers."
 
-                    session["pan"] = pan
-                    session["step"] = "income"
+            else:
 
-                    response = "What is your annual income?"
+                session["age"] = int(message)
+                session["step"] = "pan"
 
-
-            elif step == "income":
-
-                income = parse_amount(message)
-
-                if income == 0:
-                    response = "❌ Please enter valid income."
-
-                else:
-
-                    session["income"] = income
-                    session["step"] = "deductions"
-
-                    response = "Enter your deductions (80C etc) or type 0."
+                response = "Enter your PAN number (Example: ABCDE1234F)"
 
 
-            elif step == "deductions":
+        # PAN STEP
 
-                deductions = parse_amount(message)
+        elif step == "pan":
+
+            pan = message.upper()
+
+            if not re.match(r"[A-Z]{5}[0-9]{4}[A-Z]", pan):
+
+                ai_answer = ai_reply(message, session["chat_history"])
+                response = ai_answer + "<br><br>Please enter valid PAN number."
+
+            else:
+
+                session["pan"] = pan
+                session["step"] = "income"
+
+                response = "What is your annual income?"
+
+
+        # INCOME STEP
+
+        elif step == "income":
+
+            income = parse_amount(message)
+
+            if income is None:
+
+                ai_answer = ai_reply(message, session["chat_history"])
+                response = ai_answer + "<br><br>Please enter valid income."
+
+            else:
+
+                session["income"] = income
+                session["step"] = "deductions"
+
+                response = "Enter your deductions (80C etc) or type 0."
+
+
+        # DEDUCTIONS STEP
+
+        elif step == "deductions":
+
+            deductions = parse_amount(message)
+
+            if deductions is None and message != "0":
+
+                ai_answer = ai_reply(message, session["chat_history"])
+                response = ai_answer + "<br><br>Please enter deduction amount or type 0."
+
+            else:
+
+                if deductions is None:
+                    deductions = 0
 
                 income = session["income"]
                 profession = session["profession"]
@@ -278,22 +335,37 @@ Taxable Income: {format_indian(taxable)}<br><br>
 Old: {format_indian(old_tax)}<br>
 New: {format_indian(new_tax)}<br><br>
 
-✅ Recommendation: <b>{better}</b><br>
+✅ <b>Recommendation:</b> {better}<br>
 You save {format_indian(savings)}<br><br>
 
-📄 Suggested ITR Form: <b>{itr_form}</b>
+📄 <b>Suggested ITR Form:</b> {itr_form}<br><br>
+
+<hr>
+
+✅ <b>Your tax calculation is complete.</b><br><br>
+
+If you have more questions, feel free to ask about:<br>
+• Tax deductions<br>
+• ITR filing process<br>
+• Choosing tax regime<br>
+• Tax saving tips<br><br>
+
+<b>How else can I assist you today?</b>
 """
 
                 session["step"] = "complete"
 
-            else:
 
-                response = "Ask me about income tax, deductions or ITR filing."
+        # AFTER COMPLETION
+
+        else:
+
+            response = ai_reply(message, session["chat_history"])
 
 
         session["chat_history"].append({
-            "role": "assistant",
-            "content": response
+            "role":"assistant",
+            "content":response
         })
 
 
