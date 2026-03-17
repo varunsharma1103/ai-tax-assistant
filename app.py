@@ -379,4 +379,3 @@ If you have more questions, feel free to ask about:<br>
 if __name__ == "__main__":
     app.run(debug=True)
     
-handler = app
